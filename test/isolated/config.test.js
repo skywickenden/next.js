@@ -1,8 +1,8 @@
-/* global describe, it, expect */
+/* eslint-env jest */
 
 import {join} from 'path'
-import getConfig, {loadConfig} from '../../dist/server/config'
-import {PHASE_DEVELOPMENT_SERVER} from '../../dist/lib/constants'
+import loadConfig from 'next-server/next-config'
+import {PHASE_DEVELOPMENT_SERVER} from 'next-server/constants'
 
 const pathToConfig = join(__dirname, '_resolvedata', 'without-function')
 const pathToConfigFn = join(__dirname, '_resolvedata', 'with-function')
@@ -33,9 +33,18 @@ describe('config', () => {
     expect(config.webpack).toBe(null)
   })
 
-  it('Should cache on getConfig', () => {
-    const config = getConfig(PHASE_DEVELOPMENT_SERVER, pathToConfig)
-    const config2 = getConfig(PHASE_DEVELOPMENT_SERVER, pathToConfig, {extraConfig: true}) // won't add extraConfig because it's cached.
-    expect(config === config2).toBe(true)
+  it('Should throw when an invalid target is provided', () => {
+    try {
+      loadConfig(PHASE_DEVELOPMENT_SERVER, join(__dirname, '_resolvedata', 'invalid-target'))
+      // makes sure we don't just pass if the loadConfig passes while it should fail
+      throw new Error('failed')
+    } catch (err) {
+      expect(err.message).toMatch(/Specified target is invalid/)
+    }
+  })
+
+  it('Should pass when a valid target is provided', () => {
+    const config = loadConfig(PHASE_DEVELOPMENT_SERVER, join(__dirname, '_resolvedata', 'valid-target'))
+    expect(config.target).toBe('serverless')
   })
 })
